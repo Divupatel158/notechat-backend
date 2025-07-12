@@ -4,18 +4,12 @@ const { body, validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const supabase = require("../supabaseClient");
-const twilio = require('twilio');
-const otpStore = {};
 const nodemailer = require('nodemailer');
 const emailOtpStore = {};
 
 const JWT_SECRET = process.env.JWT_SECRET || "this is a notechat jwt secret";
 
-// Initialize Twilio client only if credentials are available
-const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
-  ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
-  : null;
-const TWILIO_MESSAGE_SERVICE_SID = process.env.TWILIO_MESSAGE_SERVICE_SID;
+// Twilio removed - using email OTP only
 
 // Create user - POST /api/auth/createuser
 router.post(
