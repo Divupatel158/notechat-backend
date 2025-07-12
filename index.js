@@ -5,7 +5,7 @@ const cors = require("cors");
 
 // CORS configuration - allow both 3000 and 3001 for development
 app.use(cors({ 
-  origin: ["http://localhost:3000", "http://localhost:3010"], 
+  origin: ["http://localhost:3010","https://NoteChat.onrender.com"], 
   credentials: true 
 }));
 app.use(express.json());
