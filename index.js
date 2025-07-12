@@ -3,9 +3,14 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 
-// CORS configuration - allow both 3000 and 3001 for development
+// CORS configuration - allow both development and production domains
 app.use(cors({ 
-  origin: ["http://localhost:3000", "http://localhost:3010","https://notechat-frontend.vercel.app/"], 
+  origin: [
+    "http://localhost:3000", 
+    "http://localhost:3010", 
+    "https://notechat-frontend.vercel.app",
+    "https://notechat.vercel.app"
+  ], 
   credentials: true 
 }));
 app.use(express.json());
