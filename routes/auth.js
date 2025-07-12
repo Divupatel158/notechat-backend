@@ -21,8 +21,13 @@ router.post(
     body("password").isLength({ min: 5 }),
   ],
   async (req, res) => {
+    console.log("Create user request body:", req.body);
+    console.log("Request headers:", req.headers);
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    if (!errors.isEmpty()) {
+      console.log("Validation errors:", errors.array());
+      return res.status(400).json({ errors: errors.array() });
+    }
 
     // Check if supabase is available
     if (!supabase) {
