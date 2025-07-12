@@ -20,8 +20,55 @@ app.get("/", (req, res) => {
   res.json({ 
     status: "OK", 
     message: "NoteChat Backend is running",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    environment: {
+      supabase_url: process.env.SUPABASE_URL ? "Set" : "Missing",
+      supabase_key: process.env.SUPABASE_ANON_KEY ? "Set" : "Missing",
+      jwt_secret: process.env.JWT_SECRET ? "Set" : "Using default",
+      node_env: process.env.NODE_ENV || "Not set"
+    }
   });
+});
+
+// Debug endpoint to test Supabase connection
+app.get("/debug", async (req, res) => {
+  try {
+    const supabase = require("./supabaseClient");
+    if (!supabase) {
+      return res.json({ 
+        status: "ERROR", 
+        message: "Supabase client is null",
+        environment: {
+          supabase_url: process.env.SUPABASE_URL ? "Set" : "Missing",
+          supabase_key: process.env.SUPABASE_ANON_KEY ? "Set" : "Missing"
+        }
+      });
+    }
+    
+    // Test a simple query
+    const { data, error } = await supabase.from("users").select("count").limit(1);
+    
+    if (error) {
+      return res.json({ 
+        status: "ERROR", 
+        message: "Supabase connection failed",
+        error: error.message,
+        details: error
+      });
+    }
+    
+    res.json({ 
+      status: "OK", 
+      message: "Supabase connection successful",
+      data: data
+    });
+  } catch (error) {
+    res.json({ 
+      status: "ERROR", 
+      message: "Supabase test failed",
+      error: error.message
+    });
+  }
 });
 
 // Routes

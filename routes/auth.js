@@ -26,7 +26,20 @@ router.post(
 
     // Check if supabase is available
     if (!supabase) {
-      return res.status(503).json({ success: false, errors: "Database service unavailable" });
+      console.error("Supabase client is null - missing environment variables");
+      return res.status(503).json({ 
+        success: false, 
+        errors: "Database service unavailable - missing SUPABASE_URL or SUPABASE_ANON_KEY" 
+      });
+    }
+
+    // Check if required environment variables are set
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+      console.error("Missing Supabase environment variables");
+      return res.status(503).json({ 
+        success: false, 
+        errors: "Database configuration missing - SUPABASE_URL and SUPABASE_ANON_KEY required" 
+      });
     }
 
     const { name, uname, email, password } = req.body;
@@ -55,8 +68,13 @@ router.post(
       const token = jwt.sign({ user: { id: user.id } }, JWT_SECRET);
       res.json({ success: true, token });
     } catch (error) {
-      console.error(error.message);
-      res.status(500).json({ success: false, errors: "Server error" });
+      console.error("Create user error:", error.message);
+      console.error("Error details:", error);
+      res.status(500).json({ 
+        success: false, 
+        errors: "Server error", 
+        details: error.message 
+      });
     }
   }
 );
