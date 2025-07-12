@@ -7,6 +7,11 @@ const { body, validationResult } = require("express-validator");
 // GET: /api/notes/fetchallnotes
 router.get("/fetchallnotes", fetchuser, async (req, res) => {
   try {
+    // Check if supabase is available
+    if (!supabase) {
+      return res.status(503).json({ message: "Database service unavailable" });
+    }
+
     const { data, error } = await supabase
       .from("notes")
       .select("*")
@@ -34,6 +39,11 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
+    // Check if supabase is available
+    if (!supabase) {
+      return res.status(503).json({ message: "Database service unavailable" });
+    }
+
     try {
       const { title, description, tag } = req.body;
 
@@ -58,6 +68,11 @@ router.post(
 // PUT: /api/notes/updatenote/:id
 router.put("/updatenote/:id", fetchuser, async (req, res) => {
   const { title, description, tag } = req.body;
+
+  // Check if supabase is available
+  if (!supabase) {
+    return res.status(503).json({ message: "Database service unavailable" });
+  }
 
   try {
     // 1. Fetch the note
@@ -97,6 +112,11 @@ router.put("/updatenote/:id", fetchuser, async (req, res) => {
 
 // DELETE: /api/notes/deletenote/:id
 router.delete("/deletenote/:id", fetchuser, async (req, res) => {
+  // Check if supabase is available
+  if (!supabase) {
+    return res.status(503).json({ message: "Database service unavailable" });
+  }
+
   try {
     const { data: note, error: fetchError } = await supabase
       .from("notes")
