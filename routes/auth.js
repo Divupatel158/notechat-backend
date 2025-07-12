@@ -30,6 +30,11 @@ router.post(
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
+    // Check if supabase is available
+    if (!supabase) {
+      return res.status(503).json({ success: false, errors: "Database service unavailable" });
+    }
+
     const { name, uname, email, password } = req.body;
 
     try {
@@ -73,6 +78,11 @@ router.post(
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
+    // Check if supabase is available
+    if (!supabase) {
+      return res.status(503).json({ success: false, errors: "Database service unavailable" });
+    }
+
     const { email, password } = req.body;
 
     try {
@@ -102,6 +112,11 @@ router.post("/getuser", async (req, res) => {
   try {
     const token = req.header("auth-token");
     if (!token) return res.status(401).send("Access denied");
+
+    // Check if supabase is available
+    if (!supabase) {
+      return res.status(503).json({ message: "Database service unavailable" });
+    }
 
     const decoded = jwt.verify(token, JWT_SECRET);
     const userId = decoded.user.id;
