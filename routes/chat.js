@@ -61,7 +61,7 @@ router.get('/messages/:email', fetchuser, async (req, res) => {
     .from('messages')
     .select('*')
     .or(`and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`)
-    .order('timestamp', { ascending: true });
+    .order('created_at', { ascending: true });
   if (error) return res.status(500).json({ error: error.message });
   // Optionally, include sender/receiver email and uname in each message
   // Fetch all involved users
