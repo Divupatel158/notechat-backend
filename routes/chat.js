@@ -7,14 +7,25 @@ const fetchuser = require('../middleware/fetchuser');
 router.get('/chats', fetchuser, async (req, res) => {
   const userId = req.user.id;
   console.log('DEBUG /chats: userId =', userId);
-  // Get all unique user IDs you've sent to or received from
-  const { data: messages, error } = await supabase
+
+  // Query for sent messages
+  const { data: sentMessages, error: sentError } = await supabase
     .from('messages')
     .select('sender_id, receiver_id')
-    .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
-  if (error) return res.status(500).json({ error: error.message });
-  if (!messages) return res.status(500).json({ error: 'No messages data returned from database.' });
+    .eq('sender_id', userId);
+  if (sentError) return res.status(500).json({ error: sentError.message });
+
+  // Query for received messages
+  const { data: receivedMessages, error: receivedError } = await supabase
+    .from('messages')
+    .select('sender_id, receiver_id')
+    .eq('receiver_id', userId);
+  if (receivedError) return res.status(500).json({ error: receivedError.message });
+
+  // Merge and deduplicate messages
+  const messages = [...(sentMessages || []), ...(receivedMessages || [])];
   console.log('DEBUG /chats: found messages =', messages);
+
   // Collect unique user IDs (excluding yourself)
   const contactIds = new Set();
   messages.forEach(msg => {
@@ -29,6 +40,7 @@ router.get('/chats', fetchuser, async (req, res) => {
     .select('id, email, uname')
     .in('id', Array.from(contactIds));
   if (userError) return res.status(500).json({ error: userError.message });
+  console.log('DEBUG /chats: users =', users);
   res.json({ contacts: users });
 });
 
