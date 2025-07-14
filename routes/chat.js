@@ -6,18 +6,22 @@ const fetchuser = require('../middleware/fetchuser');
 // Get all users you've chatted with (contacts)
 router.get('/chats', fetchuser, async (req, res) => {
   const userId = req.user.id;
+  console.log('DEBUG /chats: userId =', userId);
   // Get all unique user IDs you've sent to or received from
   const { data: messages, error } = await supabase
     .from('messages')
     .select('sender_id, receiver_id')
     .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
   if (error) return res.status(500).json({ error: error.message });
+  if (!messages) return res.status(500).json({ error: 'No messages data returned from database.' });
+  console.log('DEBUG /chats: found messages =', messages);
   // Collect unique user IDs (excluding yourself)
   const contactIds = new Set();
   messages.forEach(msg => {
     if (msg.sender_id !== userId) contactIds.add(msg.sender_id);
     if (msg.receiver_id !== userId) contactIds.add(msg.receiver_id);
   });
+  console.log('DEBUG /chats: contactIds =', Array.from(contactIds));
   if (contactIds.size === 0) return res.json({ contacts: [] });
   // Fetch email and uname for each contact
   const { data: users, error: userError } = await supabase
