@@ -217,4 +217,17 @@ router.post('/verify-email-otp', (req, res) => {
   res.json({ success: true, message: 'OTP verified' });
 });
 
+// Get all users (for new chat popup)
+router.get('/getallusers', async (req, res) => {
+  try {
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('id, uname, email');
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ users });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
