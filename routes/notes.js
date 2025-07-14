@@ -147,4 +147,29 @@ router.delete("/deletenote/:id", fetchuser, async (req, res) => {
   }
 });
 
+// DELETE: /api/notes/clearallnotes
+router.delete("/clearallnotes", fetchuser, async (req, res) => {
+  // Check if supabase is available
+  if (!supabase) {
+    return res.status(503).json({ message: "Database service unavailable" });
+  }
+
+  try {
+    const { data: deletedNotes, error } = await supabase
+      .from("notes")
+      .delete()
+      .eq("user", req.user.id)
+      .select();
+
+    if (error) throw error;
+    res.json({ 
+      success: "All notes have been deleted", 
+      deletedCount: deletedNotes ? deletedNotes.length : 0 
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 module.exports = router;
