@@ -182,26 +182,35 @@ router.delete("/deleteuser/:id", async (req, res) => {
 // Send Email OTP endpoint
 router.post('/send-email-otp', async (req, res) => {
   const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email is required' });
+  if (!email) return res.status(400).json({ success: false, error: "Email is required" });
+
+  // Generate a 6-digit OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  emailOtpStore[email] = { otp, expires: Date.now() + 5 * 60 * 1000 }; // 5 min expiry
+
+  // Store OTP in memory (for demo; use Redis or DB for production)
+  emailOtpStore[email] = { otp, expires: Date.now() + 10 * 60 * 1000 }; // 10 min expiry
+
+  // Send OTP via email
   try {
-    let transporter = nodemailer.createTransport({
-      service: 'gmail',
+    await nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: false,
       auth: {
-        user: process.env.EMAIL_OTP_USER,
-        pass: process.env.EMAIL_OTP_PASS
-      }
-    });
-    await transporter.sendMail({
-      from: process.env.EMAIL_OTP_USER,
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    }).sendMail({
+      from: process.env.EMAIL_USER,
       to: email,
-      subject: 'NoteChat Varification ',
-      text: `This is one time varification OTP please don't share anyone. OTP is : ${otp} `
+      subject: "Your NoteChat OTP",
+      text: `Your OTP is: ${otp}`,
     });
-    res.json({ success: true, message: 'OTP sent to email' });
+
+    res.json({ success: true, message: "OTP sent" });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to send OTP', details: err.message });
+    console.error("Error sending OTP email:", err);
+    res.status(500).json({ success: false, error: "Failed to send OTP" });
   }
 });
 
