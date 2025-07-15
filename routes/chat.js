@@ -84,7 +84,9 @@ router.get('/messages/:email', fetchuser, async (req, res) => {
 router.post('/messages', fetchuser, async (req, res) => {
   const sender_id = req.user.id;
   const { receiver_email, content } = req.body;
+  console.log('POST /messages called:', { sender_id, receiver_email, content });
   if (!receiver_email || !content) {
+    console.warn('Missing receiver_email or content');
     return res.status(400).json({ error: 'receiver_email and content are required' });
   }
   // Find receiver's id by email
@@ -93,14 +95,25 @@ router.post('/messages', fetchuser, async (req, res) => {
     .select('id, email, uname')
     .eq('email', receiver_email)
     .single();
-  if (receiverError || !receiver) return res.status(404).json({ error: 'Receiver not found' });
-  const { data, error } = await supabase
-    .from('messages')
-    .insert([{ sender_id, receiver_id: receiver.id, content }])
-    .select()
-    .single();
-  if (error) return res.status(500).json({ error: error.message });
-  res.json({ message: data });
+  if (receiverError || !receiver) {
+    console.warn('Receiver not found:', receiverError);
+    return res.status(404).json({ error: 'Receiver not found', details: receiverError?.message });
+  }
+  try {
+    const { data, error } = await supabase
+      .from('messages')
+      .insert([{ sender_id, receiver_id: receiver.id, content }])
+      .select()
+      .single();
+    if (error) {
+      console.error('Supabase insert error:', error);
+      return res.status(500).json({ error: error.message, details: error });
+    }
+    res.json({ message: data });
+  } catch (err) {
+    console.error('Unexpected error in /messages:', err);
+    res.status(500).json({ error: 'Internal server error', details: err.message });
+  }
 });
 
 module.exports = router; 
