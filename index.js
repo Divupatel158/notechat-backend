@@ -10,7 +10,8 @@ app.use(cors({
     "http://localhost:3000", 
     "http://localhost:3010", 
     "https://notechat-frontend.vercel.app",
-    "https://notechat.vercel.app"
+    "https://notechat.vercel.app",
+    "https://notechat-divupatel158s-projects.vercel.app"
   ], 
   credentials: true 
 }));
