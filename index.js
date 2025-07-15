@@ -16,6 +16,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} from ${req.headers.origin || req.ip}`);
+  next();
+});
+
 // Health check endpoint for Railway
 app.get("/", (req, res) => {
   res.json({ 
@@ -76,6 +82,12 @@ app.get("/debug", async (req, res) => {
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/notes", require("./routes/notes"));
 app.use('/api/chat', chatRouter);
+
+// Add a catch-all error handler at the end
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ status: 'ERROR', message: 'Internal server error', error: err.message });
+});
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
