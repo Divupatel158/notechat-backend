@@ -13,7 +13,9 @@ function getKey(header, callback) {
 }
 
 const fetchuser = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
+  const token =
+    req.header('Authorization')?.replace('Bearer ', '') ||
+    req.header('auth-token');
   if (!token) return res.status(401).json({ error: 'No token provided' });
   jwt.verify(token, getKey, {}, (err, decoded) => {
     if (err) return res.status(401).json({ error: 'Invalid token' });
