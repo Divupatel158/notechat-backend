@@ -116,4 +116,25 @@ router.post('/messages', fetchuser, async (req, res) => {
   }
 });
 
+// Delete all messages between you and another user (by email)
+router.delete('/messages/:email', fetchuser, async (req, res) => {
+  const userId = req.user.id;
+  const otherEmail = req.params.email;
+  // Find the other user's id by email
+  const { data: otherUser, error: otherUserError } = await supabase
+    .from('users')
+    .select('id, email, uname')
+    .eq('email', otherEmail)
+    .single();
+  if (otherUserError || !otherUser) return res.status(404).json({ error: 'User not found' });
+  const otherUserId = otherUser.id;
+  // Delete messages between the two users
+  const { data, error } = await supabase
+    .from('messages')
+    .delete()
+    .or(`and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true, deletedCount: data ? data.length : 0 });
+});
+
 module.exports = router; 
