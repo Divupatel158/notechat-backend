@@ -146,6 +146,36 @@ router.delete('/messages/:email', fetchuser, async (req, res) => {
   res.json({ success: true, deletedCount: data ? data.length : 0 });
 });
 
+// Mark all messages from a specific sender to the current user as read
+router.patch('/messages/read/:email', fetchuser, async (req, res) => {
+  const userId = req.user.id; // current user (receiver)
+  const senderEmail = req.params.email;
+  // Find the sender's id by email
+  const { data: sender, error: senderError } = await supabase
+    .from('users')
+    .select('id, email, uname')
+    .eq('email', senderEmail)
+    .single();
+  if (senderError || !sender) return res.status(404).json({ error: 'Sender not found' });
+  // Update all unread messages from sender to this user
+  const { data: updated, error } = await supabase
+    .from('messages')
+    .update({ read_at: new Date().toISOString() })
+    .eq('sender_id', sender.id)
+    .eq('receiver_id', userId)
+    .is('read_at', null)
+    .select();
+  if (error) return res.status(500).json({ error: error.message });
+  // Emit WebSocket event to sender for each message read
+  if (req.io && updated && updated.length > 0) {
+    req.io.to(sender.email).emit('message:read', {
+      messageIds: updated.map(m => m.id),
+      receiverEmail: req.user.email
+    });
+  }
+  res.json({ success: true, updatedCount: updated ? updated.length : 0 });
+});
+
 // WebSocket connection handler for joining rooms by email
 // This is not an Express route, but a function to be called from index.js if needed
 // If you want to handle socket.io connections here, you can export a function
