@@ -169,7 +169,7 @@ router.patch('/messages/read/:email', fetchuser, async (req, res) => {
   // Emit WebSocket event to sender for each message read
   if (req.io && updated && updated.length > 0) {
     req.io.to(sender.email).emit('message:read', {
-      messageIds: updated.map(m => m.id),
+      messages: updated.map(m => ({ id: m.id, read_at: m.read_at })),
       receiverEmail: req.user.email
     });
   }
