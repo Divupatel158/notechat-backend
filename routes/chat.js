@@ -79,7 +79,6 @@ router.get('/messages/:email', fetchuser, async (req, res) => {
   }));
   res.json({ messages: messagesWithUser });
 });
-
 // Send a message to another user (by email)
 router.post('/messages', fetchuser, async (req, res) => {
   const sender_id = req.user.id;
@@ -124,7 +123,6 @@ router.post('/messages', fetchuser, async (req, res) => {
     res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 });
-
 // Delete all messages between you and another user (by email)
 router.delete('/messages/:email', fetchuser, async (req, res) => {
   const userId = req.user.id;
@@ -145,7 +143,6 @@ router.delete('/messages/:email', fetchuser, async (req, res) => {
   if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true, deletedCount: data ? data.length : 0 });
 });
-
 // Mark all messages from a specific sender to the current user as read
 router.patch('/messages/read/:email', fetchuser, async (req, res) => {
   const userId = req.user.id; // current user (receiver)
