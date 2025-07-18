@@ -1,8 +1,37 @@
 require("dotenv").config();
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3010",
+      "https://notechat-frontend.vercel.app",
+      "https://notechat.vercel.app",
+      "https://notechat-divupatel158s-projects.vercel.app"
+    ],
+    credentials: true
+  }
+});
 const cors = require("cors");
 const chatRouter = require('./routes/chat');
+
+// Attach io to app for access in routes
+app.set('io', io);
+
+// Socket.IO connection handler
+io.on('connection', (socket) => {
+  // Listen for join event to join a room by email
+  socket.on('join', (email) => {
+    if (email) {
+      socket.join(email);
+      console.log(`Socket ${socket.id} joined room: ${email}`);
+    }
+  });
+});
 
 // CORS configuration - allow both development and production domains
 app.use(cors({ 
@@ -82,7 +111,10 @@ app.get("/debug", async (req, res) => {
 // Routes
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/notes", require("./routes/notes"));
-app.use('/api/chat', chatRouter);
+app.use('/api/chat', (req, res, next) => {
+  req.io = io;
+  chatRouter(req, res, next);
+});
 
 // Add a catch-all error handler at the end
 app.use((err, req, res, next) => {
@@ -91,4 +123,4 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));

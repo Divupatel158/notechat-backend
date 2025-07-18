@@ -110,6 +110,15 @@ router.post('/messages', fetchuser, async (req, res) => {
       return res.status(500).json({ error: error.message, details: error });
     }
     res.json({ message: data });
+    // Emit WebSocket event to both sender and receiver by email
+    if (req.io) {
+      req.io.to(receiver.email).emit('message:new', data);
+      // Also emit to sender (in case sender has multiple tabs)
+      const senderUser = req.user;
+      if (senderUser && senderUser.email) {
+        req.io.to(senderUser.email).emit('message:new', data);
+      }
+    }
   } catch (err) {
     console.error('Unexpected error in /messages:', err);
     res.status(500).json({ error: 'Internal server error', details: err.message });
@@ -136,5 +145,11 @@ router.delete('/messages/:email', fetchuser, async (req, res) => {
   if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true, deletedCount: data ? data.length : 0 });
 });
+
+// WebSocket connection handler for joining rooms by email
+// This is not an Express route, but a function to be called from index.js if needed
+// If you want to handle socket.io connections here, you can export a function
+// Example usage in index.js:
+//   io.on('connection', require('./routes/chat').socketHandler);
 
 module.exports = router; 
